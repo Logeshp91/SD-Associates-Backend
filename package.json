@@ -5,9 +5,19 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "migrate": "node migrate-sqlite-to-mongo.js"
   },
-  "keywords": ["crm", "loan", "finance", "sd-associates"],
+  "keywords": [
+    "crm",
+    "loan",
+    "finance",
+    "sd-associates"
+  ],
   "author": "SD Associates",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^18.0.10",
+    "mongodb": "^7.9.0"
+  }
 }

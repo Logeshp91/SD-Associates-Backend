@@ -143,25 +143,25 @@ const server = http.createServer(async (req, res) => {
       // GET /api/leads
       if (pathname === '/api/leads' && method === 'GET') {
         const filters = parsedUrl.query;
-        const leads = db.getAllLeads(filters);
+        const leads = await db.getAllLeads(filters);
         return sendJson(res, 200, { success: true, count: leads.length, data: leads });
       }
 
       // GET /api/leads/next-serial
       if (pathname === '/api/leads/next-serial' && method === 'GET') {
-        const nextSerial = db.getNextSerialNo();
+        const nextSerial = await db.getNextSerialNo();
         return sendJson(res, 200, { success: true, nextSerial });
       }
 
       // GET /api/leads/stats
       if (pathname === '/api/leads/stats' && method === 'GET') {
-        const stats = db.getStats();
+        const stats = await db.getStats();
         return sendJson(res, 200, { success: true, data: stats });
       }
 
       // GET /api/export
       if (pathname === '/api/export' && method === 'GET') {
-        const leads = db.getAllLeads(parsedUrl.query);
+        const leads = await db.getAllLeads(parsedUrl.query);
         const headers = [
           'Sl. No',
           'Customer Details (Name)',
@@ -238,25 +238,26 @@ const server = http.createServer(async (req, res) => {
         return res.end([headers.join(','), ...rows].join('\r\n'));
       }
 
-      // Single Lead match: /api/leads/:id
-      const leadIdMatch = pathname.match(/^\/api\/leads\/(\d+)$/);
+      // Single Lead match: /api/leads/:id (supports numeric id or MongoDB ObjectId)
+      const leadIdMatch = pathname.match(/^\/api\/leads\/([a-f0-9]{24}|\d+)$/i);
       if (leadIdMatch) {
-        const id = parseInt(leadIdMatch[1], 10);
+        const rawId = leadIdMatch[1];
+        const id = /^\d+$/.test(rawId) ? parseInt(rawId, 10) : rawId;
 
         if (method === 'GET') {
-          const lead = db.getLeadById(id);
+          const lead = await db.getLeadById(id);
           if (!lead) return sendJson(res, 404, { success: false, error: 'Lead not found' });
           return sendJson(res, 200, { success: true, data: lead });
         }
 
         if (method === 'PUT') {
           const payload = await parseJsonBody(req);
-          const updated = db.updateLead(id, payload);
+          const updated = await db.updateLead(id, payload);
           return sendJson(res, 200, { success: true, message: 'Lead updated successfully', data: updated });
         }
 
         if (method === 'DELETE') {
-          const result = db.deleteLead(id);
+          const result = await db.deleteLead(id);
           return sendJson(res, 200, { success: true, message: 'Lead deleted successfully', data: result });
         }
       }
@@ -267,7 +268,7 @@ const server = http.createServer(async (req, res) => {
         if (!payload.customer_name || !payload.mobile_number) {
           return sendJson(res, 400, { success: false, error: 'Customer Name and Mobile Number are required' });
         }
-        const created = db.createLead(payload);
+        const created = await db.createLead(payload);
         return sendJson(res, 201, { success: true, message: 'Lead created successfully', data: created });
       }
 
@@ -278,25 +279,25 @@ const server = http.createServer(async (req, res) => {
       // GET /api/insurance
       if (pathname === '/api/insurance' && method === 'GET') {
         const filters = parsedUrl.query;
-        const policies = db.getAllInsurancePolicies(filters);
+        const policies = await db.getAllInsurancePolicies(filters);
         return sendJson(res, 200, { success: true, count: policies.length, data: policies });
       }
 
       // GET /api/insurance/stats
       if (pathname === '/api/insurance/stats' && method === 'GET') {
-        const stats = db.getInsuranceStats();
+        const stats = await db.getInsuranceStats();
         return sendJson(res, 200, { success: true, data: stats });
       }
 
       // GET /api/insurance/next-serial
       if (pathname === '/api/insurance/next-serial' && method === 'GET') {
-        const nextSerial = db.getNextInsuranceSerialNo();
+        const nextSerial = await db.getNextInsuranceSerialNo();
         return sendJson(res, 200, { success: true, nextSerial });
       }
 
       // GET /api/insurance/export
       if (pathname === '/api/insurance/export' && method === 'GET') {
-        const policies = db.getAllInsurancePolicies(parsedUrl.query);
+        const policies = await db.getAllInsurancePolicies(parsedUrl.query);
         const headers = [
           'Sl. No',
           'Customer Name',
@@ -363,25 +364,26 @@ const server = http.createServer(async (req, res) => {
         return res.end([headers.join(','), ...rows].join('\r\n'));
       }
 
-      // Single Insurance match: /api/insurance/:id
-      const insuranceIdMatch = pathname.match(/^\/api\/insurance\/(\d+)$/);
+      // Single Insurance match: /api/insurance/:id (supports numeric id or MongoDB ObjectId)
+      const insuranceIdMatch = pathname.match(/^\/api\/insurance\/([a-f0-9]{24}|\d+)$/i);
       if (insuranceIdMatch) {
-        const id = parseInt(insuranceIdMatch[1], 10);
+        const rawId = insuranceIdMatch[1];
+        const id = /^\d+$/.test(rawId) ? parseInt(rawId, 10) : rawId;
 
         if (method === 'GET') {
-          const policy = db.getInsurancePolicyById(id);
+          const policy = await db.getInsurancePolicyById(id);
           if (!policy) return sendJson(res, 404, { success: false, error: 'Policy not found' });
           return sendJson(res, 200, { success: true, data: policy });
         }
 
         if (method === 'PUT') {
           const payload = await parseJsonBody(req);
-          const updated = db.updateInsurancePolicy(id, payload);
+          const updated = await db.updateInsurancePolicy(id, payload);
           return sendJson(res, 200, { success: true, message: 'Policy updated successfully', data: updated });
         }
 
         if (method === 'DELETE') {
-          const result = db.deleteInsurancePolicy(id);
+          const result = await db.deleteInsurancePolicy(id);
           return sendJson(res, 200, { success: true, message: 'Policy deleted successfully', data: result });
         }
       }
@@ -395,7 +397,7 @@ const server = http.createServer(async (req, res) => {
         if (!payload.to_date) {
           return sendJson(res, 400, { success: false, error: 'Insurance To Date (Expiry Date) is required' });
         }
-        const created = db.createInsurancePolicy(payload);
+        const created = await db.createInsurancePolicy(payload);
         return sendJson(res, 201, { success: true, message: 'Insurance policy created successfully', data: created });
       }
 
@@ -405,7 +407,7 @@ const server = http.createServer(async (req, res) => {
     // HTML Table Report for PDF Export
     if (pathname === '/report' && method === 'GET') {
       const filters = parsedUrl.query || {};
-      const leads = db.getAllLeads(filters);
+      const leads = await db.getAllLeads(filters);
       
       const formatInr = (n) => '₹ ' + (Number(n) || 0).toLocaleString('en-IN');
       const totalLoanVolume = leads.reduce((sum, l) => sum + (Number(l.loan_amount) || 0), 0);
@@ -615,7 +617,7 @@ const server = http.createServer(async (req, res) => {
     // HTML Table Report for Insurance CRM (PDF Export)
     if (pathname === '/report/insurance' && method === 'GET') {
       const filters = parsedUrl.query || {};
-      const policies = db.getAllInsurancePolicies(filters);
+      const policies = await db.getAllInsurancePolicies(filters);
 
       const formatInr = (n) => '₹ ' + (Number(n) || 0).toLocaleString('en-IN');
       const totalPremium = policies.reduce((sum, p) => sum + (Number(p.premium_amount) || 0), 0);
@@ -829,7 +831,14 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-function startServer(port) {
+async function startServer(port) {
+  // Initialize MongoDB Atlas connection before serving requests
+  try {
+    await db.connectToMongo();
+  } catch (err) {
+    console.warn('MongoDB connection on startup:', err.message);
+  }
+
   server.listen(port, () => {
     console.log(`\n==================================================`);
     console.log(`🚀 SD Associates CRM is running!`);
