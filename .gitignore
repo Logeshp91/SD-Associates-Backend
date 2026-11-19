@@ -1,0 +1,22 @@
+# Environment secrets
+.env
+*.env.local
+
+# Always keep template
+!.env.example
+
+# Local SQLite databases & journals
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# Node modules
+node_modules/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
